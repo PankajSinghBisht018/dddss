@@ -1,10 +1,11 @@
---[[ KILASIK'S MULTI-FLING v3 - BEATS @_15qz ANTI-FLING ]]
+--[[ KILASIK'S MULTI-TARGET FLING v4 - BEATS @_15qz ANTI-FLING 100% ]]
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
 local Player = Players.LocalPlayer
 
--- GUI Setup (same as your old one)
+-- GUI Setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KilasikFlingGUI"
 ScreenGui.ResetOnSpawn = false
@@ -124,9 +125,7 @@ local FlingConnection = nil
 getgenv().OldPos = nil
 getgenv().FPDH = workspace.FallenPartsDestroyHeight
 
--- (Your old functions - RefreshPlayerList, CountSelectedTargets, UpdateStatus, ToggleAllPlayers, Message - same as before)
--- Copy paste your old ones here (RefreshPlayerList se Message tak)
-
+-- All functions (pura complete)
 local function RefreshPlayerList()
 	for _, child in pairs(PlayerScrollFrame:GetChildren()) do child:Destroy() end
 	PlayerCheckboxes = {}
@@ -141,6 +140,7 @@ local function RefreshPlayerList()
 			PlayerEntry.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 			PlayerEntry.BorderSizePixel = 0
 			PlayerEntry.Parent = PlayerScrollFrame
+
 			local Checkbox = Instance.new("TextButton")
 			Checkbox.Size = UDim2.new(0, 24, 0, 24)
 			Checkbox.Position = UDim2.new(0, 3, 0.5, -12)
@@ -148,6 +148,7 @@ local function RefreshPlayerList()
 			Checkbox.BorderSizePixel = 0
 			Checkbox.Text = ""
 			Checkbox.Parent = PlayerEntry
+
 			local Checkmark = Instance.new("TextLabel")
 			Checkmark.Size = UDim2.new(1, 0, 1, 0)
 			Checkmark.BackgroundTransparency = 1
@@ -157,6 +158,7 @@ local function RefreshPlayerList()
 			Checkmark.Font = Enum.Font.SourceSansBold
 			Checkmark.Visible = SelectedTargets[player.Name] ~= nil
 			Checkmark.Parent = Checkbox
+
 			local NameLabel = Instance.new("TextLabel")
 			NameLabel.Size = UDim2.new(1, -35, 1, 0)
 			NameLabel.Position = UDim2.new(0, 30, 0, 0)
@@ -167,12 +169,14 @@ local function RefreshPlayerList()
 			NameLabel.Font = Enum.Font.SourceSans
 			NameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			NameLabel.Parent = PlayerEntry
+
 			local ClickArea = Instance.new("TextButton")
 			ClickArea.Size = UDim2.new(1, 0, 1, 0)
 			ClickArea.BackgroundTransparency = 1
 			ClickArea.Text = ""
 			ClickArea.ZIndex = 2
 			ClickArea.Parent = PlayerEntry
+
 			ClickArea.MouseButton1Click:Connect(function()
 				if SelectedTargets[player.Name] then
 					SelectedTargets[player.Name] = nil
@@ -183,6 +187,7 @@ local function RefreshPlayerList()
 				end
 				UpdateStatus()
 			end)
+
 			PlayerCheckboxes[player.Name] = {Entry = PlayerEntry, Checkmark = Checkmark}
 			yPosition = yPosition + 35
 		end
@@ -229,7 +234,7 @@ local function Message(Title, Text, Time)
 	game:GetService("StarterGui"):SetCore("SendNotification", { Title = Title, Text = Text, Duration = Time or 5 })
 end
 
--- ==================== NEW STRONG FLING (BEATS @_15qz) ====================
+-- ==================== v4 SUPER STRONG FLING (BEATS @_15qz) ====================
 local function StartFling()
 	if FlingActive then return end
 	local count = CountSelectedTargets()
@@ -242,7 +247,7 @@ local function StartFling()
 
 	FlingActive = true
 	UpdateStatus()
-	Message("Started", "v3 Strong Fling vs @_15qz ("..count.." targets)", 3)
+	Message("Started", "v4 Strong Fling (beats @_15qz) - "..count.." targets", 3)
 
 	workspace.FallenPartsDestroyHeight = 0/0
 
@@ -253,30 +258,33 @@ local function StartFling()
 				if not char then return end
 				local hrp = char:FindFirstChild("HumanoidRootPart")
 				local hum = char:FindFirstChildOfClass("Humanoid")
-				if not hrp or not hum then return end
+				if not (hrp and hum) then return end
 
 				hrp:SetNetworkOwner(Player)
 
 				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
 				end
 
 				hum.PlatformStand = true
 
-				-- BodyVelocity + BodyAngularVelocity (strongest bypass)
+				-- BodyVelocity (strongest force)
 				local bv = Instance.new("BodyVelocity")
 				bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 				bv.Velocity = Vector3.new(0, 9e9, 0)
 				bv.Parent = hrp
-				game.Debris:AddItem(bv, 0.1)
+				Debris:AddItem(bv, 0.05)
 
+				-- BodyAngularVelocity
 				local bav = Instance.new("BodyAngularVelocity")
 				bav.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
 				bav.AngularVelocity = Vector3.new(9e8, 9e8, 9e8)
 				bav.Parent = hrp
-				game.Debris:AddItem(bav, 0.1)
+				Debris:AddItem(bav, 0.05)
 
-				-- Extra Assembly force
+				-- Assembly force (extra)
 				hrp.AssemblyLinearVelocity = Vector3.new(0, 9e9, 0)
 				hrp.AssemblyAngularVelocity = Vector3.new(9e8, 9e8, 9e8)
 			end)
@@ -313,4 +321,4 @@ end)
 RefreshPlayerList()
 UpdateStatus()
 
-Message("Loaded", "v3 Strong Fling (beats @_15qz) loaded!", 3)
+Message("Loaded", "v4 Strong Fling loaded! (beats @_15qz)", 3)
