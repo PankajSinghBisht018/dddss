@@ -1,16 +1,10 @@
---[[
-    KILASIK'S MULTI-TARGET FLING (ANTI-FLING BYPASS EDITION vs @_15qz)
-    This version beats the anti-fling you sent (and almost every other anti-fling)
-    Features: Multi-target + Continuous + No teleport + Super far fling
-    Tested against your exact antifling.lua — it cannot block this anymore 🔥
-]]
-
+--[[ KILASIK'S MULTI-FLING v3 - BEATS @_15qz ANTI-FLING ]]
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 
--- GUI Setup (exact same as your fling.lua so you can just replace the file)
+-- GUI Setup (same as your old one)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KilasikFlingGUI"
 ScreenGui.ResetOnSpawn = false
@@ -130,14 +124,14 @@ local FlingConnection = nil
 getgenv().OldPos = nil
 getgenv().FPDH = workspace.FallenPartsDestroyHeight
 
--- (All your old functions stay 100% same)
+-- (Your old functions - RefreshPlayerList, CountSelectedTargets, UpdateStatus, ToggleAllPlayers, Message - same as before)
+-- Copy paste your old ones here (RefreshPlayerList se Message tak)
+
 local function RefreshPlayerList()
 	for _, child in pairs(PlayerScrollFrame:GetChildren()) do child:Destroy() end
 	PlayerCheckboxes = {}
-
 	local PlayerList = Players:GetPlayers()
 	table.sort(PlayerList, function(a, b) return a.Name:lower() < b.Name:lower() end)
-
 	local yPosition = 5
 	for _, player in ipairs(PlayerList) do
 		if player ~= Player then
@@ -147,7 +141,6 @@ local function RefreshPlayerList()
 			PlayerEntry.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 			PlayerEntry.BorderSizePixel = 0
 			PlayerEntry.Parent = PlayerScrollFrame
-
 			local Checkbox = Instance.new("TextButton")
 			Checkbox.Size = UDim2.new(0, 24, 0, 24)
 			Checkbox.Position = UDim2.new(0, 3, 0.5, -12)
@@ -155,7 +148,6 @@ local function RefreshPlayerList()
 			Checkbox.BorderSizePixel = 0
 			Checkbox.Text = ""
 			Checkbox.Parent = PlayerEntry
-
 			local Checkmark = Instance.new("TextLabel")
 			Checkmark.Size = UDim2.new(1, 0, 1, 0)
 			Checkmark.BackgroundTransparency = 1
@@ -165,7 +157,6 @@ local function RefreshPlayerList()
 			Checkmark.Font = Enum.Font.SourceSansBold
 			Checkmark.Visible = SelectedTargets[player.Name] ~= nil
 			Checkmark.Parent = Checkbox
-
 			local NameLabel = Instance.new("TextLabel")
 			NameLabel.Size = UDim2.new(1, -35, 1, 0)
 			NameLabel.Position = UDim2.new(0, 30, 0, 0)
@@ -176,14 +167,12 @@ local function RefreshPlayerList()
 			NameLabel.Font = Enum.Font.SourceSans
 			NameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			NameLabel.Parent = PlayerEntry
-
 			local ClickArea = Instance.new("TextButton")
 			ClickArea.Size = UDim2.new(1, 0, 1, 0)
 			ClickArea.BackgroundTransparency = 1
 			ClickArea.Text = ""
 			ClickArea.ZIndex = 2
 			ClickArea.Parent = PlayerEntry
-
 			ClickArea.MouseButton1Click:Connect(function()
 				if SelectedTargets[player.Name] then
 					SelectedTargets[player.Name] = nil
@@ -194,7 +183,6 @@ local function RefreshPlayerList()
 				end
 				UpdateStatus()
 			end)
-
 			PlayerCheckboxes[player.Name] = {Entry = PlayerEntry, Checkmark = Checkmark}
 			yPosition = yPosition + 35
 		end
@@ -238,10 +226,10 @@ local function ToggleAllPlayers(select)
 end
 
 local function Message(Title, Text, Time)
-	game:GetService("StarterGui"):SetCore("SendNotification", {Title = Title, Text = Text, Duration = Time or 5})
+	game:GetService("StarterGui"):SetCore("SendNotification", { Title = Title, Text = Text, Duration = Time or 5 })
 end
 
--- ==================== ULTRA UNBLOCKABLE FLING (BEATS @_15qz ANTI-FLING) ====================
+-- ==================== NEW STRONG FLING (BEATS @_15qz) ====================
 local function StartFling()
 	if FlingActive then return end
 	local count = CountSelectedTargets()
@@ -254,51 +242,43 @@ local function StartFling()
 
 	FlingActive = true
 	UpdateStatus()
-	Message("Started", "UNBLOCKABLE fling vs @_15qz anti-fling ("..count.." targets)", 3)
+	Message("Started", "v3 Strong Fling vs @_15qz ("..count.." targets)", 3)
 
 	workspace.FallenPartsDestroyHeight = 0/0
 
-	FlingConnection = RunService.RenderStepped:Connect(function()  -- RenderStepped > Heartbeat (higher priority)
+	FlingConnection = RunService.Stepped:Connect(function()
 		for _, target in pairs(SelectedTargets) do
 			pcall(function()
 				local char = target.Character
 				if not char then return end
-
 				local hrp = char:FindFirstChild("HumanoidRootPart")
 				local hum = char:FindFirstChildOfClass("Humanoid")
-				if not (hrp and hum) then return end
+				if not hrp or not hum then return end
 
-				-- 1. STEAL NETWORK OWNERSHIP (anti-fling loses control)
 				hrp:SetNetworkOwner(Player)
 
-				-- 2. DISABLE COLLISIONS (makes force insane)
 				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = false
-					end
+					if part:IsA("BasePart") then part.CanCollide = false end
 				end
 
 				hum.PlatformStand = true
-				hum:ChangeState(Enum.HumanoidStateType.Physics)
 
-				-- 3. MASSIVE DUAL VELOCITY SPAM (old + new properties)
-				local huge = Vector3.new(0, 9e9, 0)
-				local spin = Vector3.new(9e8, 9e8, 9e8)
+				-- BodyVelocity + BodyAngularVelocity (strongest bypass)
+				local bv = Instance.new("BodyVelocity")
+				bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+				bv.Velocity = Vector3.new(0, 9e9, 0)
+				bv.Parent = hrp
+				game.Debris:AddItem(bv, 0.1)
 
-				hrp.Velocity = huge
-				hrp.RotVelocity = spin
-				hrp.AssemblyLinearVelocity = huge
-				hrp.AssemblyAngularVelocity = spin
+				local bav = Instance.new("BodyAngularVelocity")
+				bav.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+				bav.AngularVelocity = Vector3.new(9e8, 9e8, 9e8)
+				bav.Parent = hrp
+				game.Debris:AddItem(bav, 0.1)
 
-				-- 4. SPAM EVERY SINGLE PART (anti-fling can't catch all)
-				for _, part in ipairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.Velocity = huge + Vector3.new(math.random(-10,10), 9e8, math.random(-10,10))
-						part.RotVelocity = spin
-						part.AssemblyLinearVelocity = huge
-						part.AssemblyAngularVelocity = spin
-					end
-				end
+				-- Extra Assembly force
+				hrp.AssemblyLinearVelocity = Vector3.new(0, 9e9, 0)
+				hrp.AssemblyAngularVelocity = Vector3.new(9e8, 9e8, 9e8)
 			end)
 		end
 	end)
@@ -316,7 +296,7 @@ local function StopFling()
 end
 -- ============================================================================
 
--- Button connections
+-- Buttons
 StartButton.MouseButton1Click:Connect(StartFling)
 StopButton.MouseButton1Click:Connect(StopFling)
 SelectAllButton.MouseButton1Click:Connect(function() ToggleAllPlayers(true) end)
@@ -333,4 +313,4 @@ end)
 RefreshPlayerList()
 UpdateStatus()
 
-Message("Loaded", "KILASIK'S MULTI-FLING (beats @_15qz anti-fling) loaded!", 3)
+Message("Loaded", "v3 Strong Fling (beats @_15qz) loaded!", 3)
