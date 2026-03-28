@@ -1,176 +1,407 @@
---Instructions Copy and paste into script builder,
---Put two names into "YOURNAME", and "THE VICTIM" (One of them doesn't have to be you)
+--[[ KILASIK's Multi-Target Fling Exploit (VOID + SITTING BYPASS)
+Features:
+- Select multiple targets
+- Works even if target is SITTING
+- Sends targets straight to VOID (FallenPartsDestroyHeight = 0/0)
+- Continuous flinging until stopped
+- Beats @_15qz anti-fling
+]]
 
---This Script Makes two players in your game.. Well.. I think its in the title ;D
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Player = Players.LocalPlayer
 
-----------------------------------------------------------------------------------------
-function fWeld(zName, zParent, zPart0, zPart1, zCoco, a, b, c, d, e, f) 
-local funcw = Instance.new("Weld") 
-funcw.Name = zName 
-funcw.Parent = zParent 
-funcw.Part0 = zPart0 
-funcw.Part1 = zPart1 
-if (zCoco == true) then 
-funcw.C0 = CFrame.new(a, b, c) * CFrame.fromEulerAnglesXYZ(d, e, f) 
-else 
-funcw.C1 = CFrame.new(a, b, c) * CFrame.fromEulerAnglesXYZ(d, e, f) 
-end 
-return funcw 
+-- GUI Setup (same as before)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KilasikFlingGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -30, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "KILASIK'S MULTI-FLING"
+Title.TextColor3 = Color3.fromRGB(255, 80, 80)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 18
+Title.Parent = TitleBar
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 18
+CloseButton.Parent = TitleBar
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Position = UDim2.new(0, 10, 0, 40)
+StatusLabel.Size = UDim2.new(1, -20, 0, 25)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Select targets to fling"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.TextSize = 16
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = MainFrame
+
+local SelectionFrame = Instance.new("Frame")
+SelectionFrame.Position = UDim2.new(0, 10, 0, 70)
+SelectionFrame.Size = UDim2.new(1, -20, 0, 200)
+SelectionFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SelectionFrame.BorderSizePixel = 0
+SelectionFrame.Parent = MainFrame
+
+local PlayerScrollFrame = Instance.new("ScrollingFrame")
+PlayerScrollFrame.Position = UDim2.new(0, 5, 0, 5)
+PlayerScrollFrame.Size = UDim2.new(1, -10, 1, -10)
+PlayerScrollFrame.BackgroundTransparency = 1
+PlayerScrollFrame.BorderSizePixel = 0
+PlayerScrollFrame.ScrollBarThickness = 6
+PlayerScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+PlayerScrollFrame.Parent = SelectionFrame
+
+local StartButton = Instance.new("TextButton")
+StartButton.Position = UDim2.new(0, 10, 0, 280)
+StartButton.Size = UDim2.new(0.5, -15, 0, 40)
+StartButton.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+StartButton.BorderSizePixel = 0
+StartButton.Text = "START FLING"
+StartButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartButton.Font = Enum.Font.SourceSansBold
+StartButton.TextSize = 18
+StartButton.Parent = MainFrame
+
+local StopButton = Instance.new("TextButton")
+StopButton.Position = UDim2.new(0.5, 5, 0, 280)
+StopButton.Size = UDim2.new(0.5, -15, 0, 40)
+StopButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+StopButton.BorderSizePixel = 0
+StopButton.Text = "STOP FLING"
+StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StopButton.Font = Enum.Font.SourceSansBold
+StopButton.TextSize = 18
+StopButton.Parent = MainFrame
+
+local SelectAllButton = Instance.new("TextButton")
+SelectAllButton.Position = UDim2.new(0, 10, 0, 330)
+SelectAllButton.Size = UDim2.new(0.5, -15, 0, 30)
+SelectAllButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SelectAllButton.BorderSizePixel = 0
+SelectAllButton.Text = "SELECT ALL"
+SelectAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SelectAllButton.Font = Enum.Font.SourceSans
+SelectAllButton.TextSize = 14
+SelectAllButton.Parent = MainFrame
+
+local DeselectAllButton = Instance.new("TextButton")
+DeselectAllButton.Position = UDim2.new(0.5, 5, 0, 330)
+DeselectAllButton.Size = UDim2.new(0.5, -15, 0, 30)
+DeselectAllButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+DeselectAllButton.BorderSizePixel = 0
+DeselectAllButton.Text = "DESELECT ALL"
+DeselectAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DeselectAllButton.Font = Enum.Font.SourceSans
+DeselectAllButton.TextSize = 14
+DeselectAllButton.Parent = MainFrame
+
+-- Variables
+local SelectedTargets = {}
+local PlayerCheckboxes = {}
+local FlingActive = false
+local FlingConnection = nil
+getgenv().OldPos = nil
+getgenv().FPDH = workspace.FallenPartsDestroyHeight
+
+-- Refresh Player List
+local function RefreshPlayerList()
+	for _, child in pairs(PlayerScrollFrame:GetChildren()) do child:Destroy() end
+	PlayerCheckboxes = {}
+	local PlayerList = Players:GetPlayers()
+	table.sort(PlayerList, function(a, b) return a.Name:lower() < b.Name:lower() end)
+	local yPosition = 5
+	for _, player in ipairs(PlayerList) do
+		if player ~= Player then
+			local PlayerEntry = Instance.new("Frame")
+			PlayerEntry.Size = UDim2.new(1, -10, 0, 30)
+			PlayerEntry.Position = UDim2.new(0, 5, 0, yPosition)
+			PlayerEntry.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+			PlayerEntry.BorderSizePixel = 0
+			PlayerEntry.Parent = PlayerScrollFrame
+
+			local Checkbox = Instance.new("TextButton")
+			Checkbox.Size = UDim2.new(0, 24, 0, 24)
+			Checkbox.Position = UDim2.new(0, 3, 0.5, -12)
+			Checkbox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+			Checkbox.BorderSizePixel = 0
+			Checkbox.Text = ""
+			Checkbox.Parent = PlayerEntry
+
+			local Checkmark = Instance.new("TextLabel")
+			Checkmark.Size = UDim2.new(1, 0, 1, 0)
+			Checkmark.BackgroundTransparency = 1
+			Checkmark.Text = "✓"
+			Checkmark.TextColor3 = Color3.fromRGB(0, 255, 0)
+			Checkmark.TextSize = 18
+			Checkmark.Font = Enum.Font.SourceSansBold
+			Checkmark.Visible = SelectedTargets[player.Name] ~= nil
+			Checkmark.Parent = Checkbox
+
+			local NameLabel = Instance.new("TextLabel")
+			NameLabel.Size = UDim2.new(1, -35, 1, 0)
+			NameLabel.Position = UDim2.new(0, 30, 0, 0)
+			NameLabel.BackgroundTransparency = 1
+			NameLabel.Text = player.Name
+			NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			NameLabel.TextSize = 16
+			NameLabel.Font = Enum.Font.SourceSans
+			NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+			NameLabel.Parent = PlayerEntry
+
+			local ClickArea = Instance.new("TextButton")
+			ClickArea.Size = UDim2.new(1, 0, 1, 0)
+			ClickArea.BackgroundTransparency = 1
+			ClickArea.Text = ""
+			ClickArea.ZIndex = 2
+			ClickArea.Parent = PlayerEntry
+
+			ClickArea.MouseButton1Click:Connect(function()
+				if SelectedTargets[player.Name] then
+					SelectedTargets[player.Name] = nil
+					Checkmark.Visible = false
+				else
+					SelectedTargets[player.Name] = player
+					Checkmark.Visible = true
+				end
+				UpdateStatus()
+			end)
+
+			PlayerCheckboxes[player.Name] = { Entry = PlayerEntry, Checkmark = Checkmark }
+			yPosition = yPosition + 35
+		end
+	end
+	PlayerScrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPosition + 5)
 end
-function fun(n1, n2)
-pcall(function()
-t1 = game.Players[n1].Character.Torso 
-t2 = game.Players[n2].Character.Torso 
-t2.Parent.Humanoid.PlatformStand = true 
-t1["Left Shoulder"]:Remove() 
-ls1 = Instance.new("Weld") 
-ls1.Parent = t1 
-ls1.Part0 = t1 
-ls1.Part1 = t1.Parent["Left Arm"] 
-ls1.C0 = CFrame.new(-1.5,0,0) 
-ls1.Name = "Left Shoulder" 
-t1["Right Shoulder"]:Remove() 
-rs1 = Instance.new("Weld") 
-rs1.Parent = t1 
-rs1.Part0 = t1 
-rs1.Part1 = t1.Parent["Right Arm"] 
-rs1.C0 = CFrame.new(1.5,0,0) 
-rs1.Name = "Right Shoulder" 
-t2["Left Shoulder"]:Remove() 
-ls2 = Instance.new("Weld") 
-ls2.Parent = t2 
-ls2.Part0 = t2 
-ls2.Part1 = t2.Parent["Left Arm"] 
-ls2.C0 = CFrame.new(-1.5,0,0) 
-ls2.Name = "Left Shoulder" 
-t2["Right Shoulder"]:Remove() 
-rs2 = Instance.new("Weld") 
-rs2.Parent = t2 
-rs2.Part0 = t2 
-rs2.Part1 = t2.Parent["Right Arm"] 
-rs2.C0 = CFrame.new(1.5,0,0) 
-rs2.Name = "Right Shoulder" 
-t2["Left Hip"]:Remove() 
-lh2 = Instance.new("Weld") 
-lh2.Parent = t2 
-lh2.Part0 = t2 
-lh2.Part1 = t2.Parent["Left Leg"] 
-lh2.C0 = CFrame.new(-0.5,-2,0) 
-lh2.Name = "Left Hip" 
-t2["Right Hip"]:Remove() 
-rh2 = Instance.new("Weld") 
-rh2.Parent = t2 
-rh2.Part0 = t2 
-rh2.Part1 = t2.Parent["Right Leg"] 
-rh2.C0 = CFrame.new(0.5,-2,0) 
-rh2.Name = "Right Hip" 
-local d = Instance.new("Part") 
-d.TopSurface = 0 
-d.BottomSurface = 0 
-d.CanCollide = false 
-d.BrickColor = BrickColor.new("Medium stone grey") 
-d.Shape = "Ball" 
-d.Parent = t1 
-d.Size = Vector3.new(1,1,1) 
-local dm = Instance.new("SpecialMesh") 
-dm.MeshType = "Sphere" 
-dm.Parent = d 
-dm.Scale = Vector3.new(0.4,0.4,0.4) 
-fWeld("weld",t1,t1,d,true,-0.2,-1.3,-0.6,0,0,0) 
-d2 = d:Clone() 
-d2.Parent = t1 
-fWeld("weld",t1,t1,d2,true,0.2,-1.3,-0.6,0,0,0) 
-local c = Instance.new("Part") 
-c.TopSurface = 0 
-c.BottomSurface = 0 
-c.CanCollide = false 
-c.BrickColor = BrickColor.new("Pastel brown") 
-c.Parent = t1 
-c.formFactor = "Custom" 
-c.Size = Vector3.new(0.4,1.3,0.4) 
-cm = Instance.new("CylinderMesh") 
-cm.Parent = c 
-a = fWeld("weld",t1,t1,c,true,0,-1,-0.52+(-c.Size.y/2),math.rad(-80),0,0) 
-c2 = d:Clone() 
-c2.BrickColor = BrickColor.new("Medium stone grey") 
-c2.Mesh.Scale = Vector3.new(0.4,0.62,0.4) 
-c2.Parent = t1 
-fWeld("weld",c,c,c2,true,0,0+(c.Size.y/2),0,math.rad(-10),0,0) 
-local bl = Instance.new("Part") 
-bl.TopSurface = 0 
-bl.BottomSurface = 0 
-bl.CanCollide = false 
-bl.BrickColor = BrickColor.new("Pastel brown") 
-bl.Shape = "Ball" 
-bl.Parent = t2 
-bl.Size = Vector3.new(1,1,1) 
-local dm = Instance.new("SpecialMesh") 
-dm.MeshType = "Sphere" 
-dm.Parent = bl 
-dm.Scale = Vector3.new(1.2,1.2,1.2) 
-fWeld("weld",t2,t2,bl,true,-0.5,0.5,-0.6,0,0,0) 
-local br = Instance.new("Part") 
-br.TopSurface = 0 
-br.BottomSurface = 0 
-br.CanCollide = false 
-br.BrickColor = BrickColor.new("Pastel brown") 
-br.Shape = "Ball" 
-br.Parent = t2 
-br.Size = Vector3.new(1,1,1) 
-local dm = Instance.new("SpecialMesh") 
-dm.MeshType = "Sphere" 
-dm.Parent = br 
-dm.Scale = Vector3.new(1.2,1.2,1.2) 
-fWeld("weld",t2,t2,br,true,0.5,0.5,-0.6,0,0,0) 
-local bln = Instance.new("Part") 
-bln.TopSurface = 0 
-bln.BottomSurface = 0 
-bln.CanCollide = false 
-bln.Shape = "Ball" 
-bln.Parent = t2 
-bln.Size = Vector3.new(1,1,1) 
-local dm = Instance.new("SpecialMesh") 
-dm.MeshType = "Sphere" 
-dm.Parent = bln 
-dm.Scale = Vector3.new(0.2,0.2,0.2) 
-fWeld("weld",t2,t2,bln,true,-0.5,0.5,-1.2,0,0,0) 
-local brn = Instance.new("Part") 
-brn.TopSurface = 0 
-brn.BottomSurface = 0 
-brn.CanCollide = false 
-brn.Shape = "Ball" 
-brn.Parent = t2 
-brn.Size = Vector3.new(1,1,1) 
-local dm = Instance.new("SpecialMesh") 
-dm.MeshType = "Sphere" 
-dm.Parent = brn 
-dm.Scale = Vector3.new(0.2,0.2,0.2) 
-fWeld("weld",t2,t2,brn,true,0.5,0.5,-1.2,0,0,0) 
-lh2.C1 = CFrame.new(0,-1.5,-0.5) * CFrame.Angles(0.9,-0.4,0) 
-rh2.C1 = CFrame.new(0,-1.5,-0.5) * CFrame.Angles(0.9,0.4,0) 
-ls2.C1 = CFrame.new(-0.5,-1.3,-0.5) * CFrame.Angles(0.9,-0.4,0) 
-rs2.C1 = CFrame.new(0.5,-1.3,-0.5) * CFrame.Angles(0.9,0.4,0) 
-ls1.C1 = CFrame.new(-0.5,0.7,0) * CFrame.Angles(-0.9,-0.4,0) 
-rs1.C1 = CFrame.new(0.5,0.7,0) * CFrame.Angles(-0.9,0.4,0) 
-if t1:findFirstChild("weldx") ~= nil then 
-t1.weldx:Remove() 
-end 
-we = fWeld("weldx", t1, t1, t2, true, 0, -0.9, -1.3, math.rad(-90), 0, 0) 
-n = t2.Neck 
-n.C0 = CFrame.new(0, 1.5, 0) * CFrame.Angles(math.rad(-210), math.rad(180), 0)
+
+local function CountSelectedTargets()
+	local count = 0
+	for _ in pairs(SelectedTargets) do count = count + 1 end
+	return count
+end
+
+local function UpdateStatus()
+	local count = CountSelectedTargets()
+	if FlingActive then
+		StatusLabel.Text = "Flinging " .. count .. " target(s)"
+		StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+	else
+		StatusLabel.Text = count .. " target(s) selected"
+		StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	end
+end
+
+local function ToggleAllPlayers(select)
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= Player then
+			local checkboxData = PlayerCheckboxes[player.Name]
+			if checkboxData then
+				if select then
+					SelectedTargets[player.Name] = player
+					checkboxData.Checkmark.Visible = true
+				else
+					SelectedTargets[player.Name] = nil
+					checkboxData.Checkmark.Visible = false
+				end
+			end
+		end
+	end
+	UpdateStatus()
+end
+
+local function Message(Title, Text, Time)
+	game:GetService("StarterGui"):SetCore("SendNotification", { Title = Title, Text = Text, Duration = Time or 5 })
+end
+
+-- ==================== VOID FLING (WORKS EVEN IF SITTING) ====================
+local function SkidFling(TargetPlayer)
+	local Character = Player.Character
+	local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+	local RootPart = Humanoid and Humanoid.RootPart
+	local TCharacter = TargetPlayer.Character
+	if not TCharacter then return end
+
+	local THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
+	local TRootPart = THumanoid and THumanoid.RootPart
+	local THead = TCharacter:FindFirstChild("Head")
+	local Accessory = TCharacter:FindFirstChildOfClass("Accessory")
+	local Handle = Accessory and Accessory:FindFirstChild("Handle")
+
+	-- ANTI-FLING BYPASS + SITTING BYPASS
+	pcall(function()
+		if TRootPart then
+			TRootPart:SetNetworkOwner(Player)
+		end
+		for _, part in pairs(TCharacter:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+		if THumanoid then
+			THumanoid.PlatformStand = true
+			THumanoid:ChangeState(Enum.HumanoidStateType.Physics) -- force out of seat
+		end
+	end)
+
+	if Character and Humanoid and RootPart then
+		if RootPart.Velocity.Magnitude < 50 then
+			getgenv().OldPos = RootPart.CFrame
+		end
+
+		if THead then
+			workspace.CurrentCamera.CameraSubject = THead
+		elseif Handle then
+			workspace.CurrentCamera.CameraSubject = Handle
+		elseif THumanoid and TRootPart then
+			workspace.CurrentCamera.CameraSubject = THumanoid
+		end
+
+		local FPos = function(BasePart, Pos, Ang)
+			RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+			Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
+			RootPart.Velocity = Vector3.new(9e7, -9e7, 9e7) -- strong downward
+			RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+			RootPart.AssemblyLinearVelocity = Vector3.new(9e7, -9e7, 9e7)
+			RootPart.AssemblyAngularVelocity = Vector3.new(9e8, 9e8, 9e8)
+		end
+
+		local SFBasePart = function(BasePart)
+			local TimeToWait = 2
+			local Time = tick()
+			local Angle = 0
+			repeat
+				if RootPart and THumanoid then
+					FPos(BasePart, CFrame.new(0, -50, 0), CFrame.Angles(math.rad(Angle), 0, 0)) -- big downward push
+					task.wait()
+					Angle = Angle + 100
+				end
+			until Time + TimeToWait < tick() or not FlingActive
+		end
+
+		workspace.FallenPartsDestroyHeight = 0/0   -- VOID MODE
+
+		local BV = Instance.new("BodyVelocity")
+		BV.Parent = RootPart
+		BV.Velocity = Vector3.new(0, -9e9, 0)   -- massive downward
+		BV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+
+		Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+		if TRootPart then
+			SFBasePart(TRootPart)
+		elseif THead then
+			SFBasePart(THead)
+		elseif Handle then
+			SFBasePart(Handle)
+		end
+
+		BV:Destroy()
+		Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+		workspace.CurrentCamera.CameraSubject = Humanoid
+
+		if getgenv().OldPos then
+			repeat
+				RootPart.CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
+				Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, .5, 0))
+				Humanoid:ChangeState("GettingUp")
+				task.wait()
+			until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25
+			workspace.FallenPartsDestroyHeight = getgenv().FPDH
+		end
+	end
+end
+
+-- Start / Stop (same as before)
+local function StartFling()
+	if FlingActive then return end
+	local count = CountSelectedTargets()
+	if count == 0 then
+		StatusLabel.Text = "No targets selected!"
+		wait(1)
+		UpdateStatus()
+		return
+	end
+
+	FlingActive = true
+	UpdateStatus()
+	Message("Started", "VOID FLING started ("..count.." targets) - even sitting!", 3)
+
+	spawn(function()
+		while FlingActive do
+			local validTargets = {}
+			for name, player in pairs(SelectedTargets) do
+				if player and player.Parent then
+					validTargets[name] = player
+				else
+					SelectedTargets[name] = nil
+					local checkbox = PlayerCheckboxes[name]
+					if checkbox then checkbox.Checkmark.Visible = false end
+				end
+			end
+
+			for _, player in pairs(validTargets) do
+				if FlingActive then
+					SkidFling(player)
+					wait(0.1)
+				else
+					break
+				end
+			end
+			UpdateStatus()
+			wait(0.5)
+		end
+	end)
+end
+
+local function StopFling()
+	if not FlingActive then return end
+	FlingActive = false
+	UpdateStatus()
+	Message("Stopped", "Fling has been stopped", 2)
+end
+
+-- Buttons
+StartButton.MouseButton1Click:Connect(StartFling)
+StopButton.MouseButton1Click:Connect(StopFling)
+SelectAllButton.MouseButton1Click:Connect(function() ToggleAllPlayers(true) end)
+DeselectAllButton.MouseButton1Click:Connect(function() ToggleAllPlayers(false) end)
+CloseButton.MouseButton1Click:Connect(function() StopFling() ScreenGui:Destroy() end)
+
+Players.PlayerAdded:Connect(RefreshPlayerList)
+Players.PlayerRemoving:Connect(function(player)
+	if SelectedTargets[player.Name] then SelectedTargets[player.Name] = nil end
+	RefreshPlayerList()
+	UpdateStatus()
 end)
-coroutine.resume(coroutine.create(function()
-while wait() do 
-for i = 1,6 do 
-we.C1 = we.C1 * CFrame.new(0,-0.3,0) 
-wait() 
-end 
 
-for i = 1,6 do 
-we.C1 = we.C1 * CFrame.new(0,0.3,0) 
-wait() 
-end 
-end
-end))
-end
-fun("Teqii", "THE VICTIM")
+RefreshPlayerList()
+UpdateStatus()
+Message("Loaded", "VOID + SITTING Fling loaded!", 3)
